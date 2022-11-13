@@ -1,69 +1,88 @@
 package org.example;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.Function;
 
-public class MyList<T extends Number> implements Iterable<T> {
+@SuppressWarnings("unchecked")
+public class  MyList<T extends Number> implements MyListInterface<T> {
     // ArrayList
     private static final int DEFAULT_CAPACITY = 10;
-    private T[] myList;
-    private static int sizeOfArray = 0;
+    private Object[] innerArray;
+    private int sizeOfArray;
 
-    public void add(T o) {
-        for (int i = 0; i < myList.length; i++) {
-            myList[i] = o;
-            sizeOfArray++;
-            break;
-        }
-        if (sizeOfArray > myList.length - 1) {
-            size();
+    public MyList(int capacity) {
+        if (capacity <= 0) {
+            throw new IllegalArgumentException("Invalid capacity");
+        } else {
+            innerArray = new Object[capacity];
         }
     }
 
+    public MyList() {
+        innerArray = new Object[DEFAULT_CAPACITY];
+    }
+
+    @Override
+    public void add(T o) {
+        if (sizeOfArray == innerArray.length) {
+            resize();
+        }
+        innerArray[sizeOfArray] = o;
+        sizeOfArray++;
+    }
+
+    @Override
     public T get(int index) {
-        return myList[index];
+        checkInBounds(index);
+        return (T) innerArray[index];
     }
 
     private void resize() {
-        T[] newMyList = (T[]) new Object[DEFAULT_CAPACITY * 2];
-        System.arraycopy(myList, 0, newMyList, 0, sizeOfArray);
-        myList = newMyList;
+        Object[] newMyList = new Object[innerArray.length * 2];
+        System.arraycopy(innerArray, 0, newMyList, 0, sizeOfArray);
+        innerArray = newMyList;
     }
 
+    @Override
     public T remove(int index) {
-        T element = null;
-        for (int i = 0; i < sizeOfArray - 1; i++) {
-            if (i == index) {
-                element = myList[i];
-            }
-            myList[i] = myList[i + 1];
+        checkInBounds(index);
+        T element = (T) innerArray[index];
+       for (int i = index; i < innerArray.length-1; i++) {
+            innerArray[i] = innerArray[i+1];
         }
-        sizeOfArray--;
-        return element;
+       sizeOfArray--;
+       return element;
     }
 
+    private void checkInBounds(int index) {
+        if (index >= sizeOfArray || index < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+
+    @Override
     public <R extends Number> MyList<R> map(Function<T, R> f) {
         MyList<R> newTypeList = new MyList<>();
-        for (T t : myList) {
-            newTypeList.add(f.apply(t));
+        for (Object t : innerArray) {
+            newTypeList.add(f.apply((T) t));
         }
         return newTypeList;
     }
 
+    @Override
     public int size() {
-        return myList.length;
+        return sizeOfArray;
     }
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append('[');
-        for (int i = 0; i < myList.length; i++) {
-            sb.append(myList[i]).append(',');
+        for (Object t : innerArray) {
+            sb.append(t).append(',');
         }
-        if (sb.lastIndexOf(",") == ',') {
-            sb.append(',').append(']');
-        }
+        sb.deleteCharAt(sb.lastIndexOf(",")).append(']');
+
         return String.valueOf(sb);
     }
 
@@ -81,29 +100,18 @@ public class MyList<T extends Number> implements Iterable<T> {
 
         @Override
         public boolean hasNext() {
-            return index < myList.length && myList[index] != null;
+            return index < innerArray.length && innerArray[index] != null;
         }
 
         @Override
         public T next() {
-            return (T) myList[index++];
+            return (T) innerArray[index++];
+        }
+
+        @Override
+        public void remove() {
+            MyList.this.remove(index);
         }
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        for (T t : myList) {
-            hash = 31 * hash + ((int) t * 7777);
-        }
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        MyList<T> list = (MyList<T>) obj;
-        return Arrays.equals(myList, list.myList);
-    }    
 }
