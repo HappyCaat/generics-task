@@ -1,10 +1,10 @@
 package org.example;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.Function;
 
-@SuppressWarnings("unchecked")
-public class  MyList<T extends Number> implements MyListInterface<T> {
+public class  MyList<T extends Number> implements Iterable<T> {
     // ArrayList
     private static final int DEFAULT_CAPACITY = 10;
     private Object[] innerArray;
@@ -22,7 +22,6 @@ public class  MyList<T extends Number> implements MyListInterface<T> {
         innerArray = new Object[DEFAULT_CAPACITY];
     }
 
-    @Override
     public void add(T o) {
         if (sizeOfArray == innerArray.length) {
             resize();
@@ -31,7 +30,6 @@ public class  MyList<T extends Number> implements MyListInterface<T> {
         sizeOfArray++;
     }
 
-    @Override
     public T get(int index) {
         checkInBounds(index);
         return (T) innerArray[index];
@@ -43,7 +41,6 @@ public class  MyList<T extends Number> implements MyListInterface<T> {
         innerArray = newMyList;
     }
 
-    @Override
     public T remove(int index) {
         checkInBounds(index);
         T element = (T) innerArray[index];
@@ -60,21 +57,20 @@ public class  MyList<T extends Number> implements MyListInterface<T> {
         }
     }
 
-
-    @Override
     public <R extends Number> MyList<R> map(Function<T, R> f) {
         MyList<R> newTypeList = new MyList<>();
-        for (Object t : innerArray) {
-            newTypeList.add(f.apply((T) t));
+        for (int i = 0; i < innerArray.length && innerArray[i] != null; i++) {
+            Object t = innerArray[i];
+            newTypeList.add(f.apply((T) innerArray[i]));
         }
         return newTypeList;
     }
 
-    @Override
     public int size() {
         return sizeOfArray;
     }
 
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append('[');
@@ -82,7 +78,6 @@ public class  MyList<T extends Number> implements MyListInterface<T> {
             sb.append(t).append(',');
         }
         sb.deleteCharAt(sb.lastIndexOf(",")).append(']');
-
         return String.valueOf(sb);
     }
 
@@ -114,4 +109,25 @@ public class  MyList<T extends Number> implements MyListInterface<T> {
         }
     }
 
+    @Override
+    public int hashCode() {
+        int result = 1;
+        for (int i = 0; i < innerArray.length && innerArray[i] != null; i++) {
+            Object o = innerArray[i];
+            result = 31 * result + ((int) o * 777);
+        }
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || o.getClass() != getClass()) {
+            return false;
+        }
+        MyList<T> myList = (MyList<T>) o;
+        return Arrays.equals(innerArray, myList.innerArray);
+    }
 }
